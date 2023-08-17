@@ -5,8 +5,8 @@ AHB-Lite Quad I/O SPI Flash memory controller with support for:
 Intended to be used with SoCs that have no on-chip flash memory. 
 
 ## Todo:
- - [] Add support for WB bus
- - [] Support cache configurations other than 16 bytes per line
+ - [ ] Add support for WB bus
+ - [ ] Support cache configurations other than 16 bytes per line
 
  ## Performance
 The following table shows a typical SoC performance (execution time in msec) using different cache line sizes 
