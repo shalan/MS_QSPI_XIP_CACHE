@@ -1,4 +1,4 @@
-# MS_QSPI_FLASH_CTRL
+# MS_QSPI_XIP_CACHE
 AHB-Lite Quad I/O SPI Flash memory controller with support for:
 - XiP 
 - Nx16 Direct-Mapped Cache
