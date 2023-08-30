@@ -17,7 +17,7 @@
             "cache"
         ],
         "bus": [
-            "AHBL",
+            "AHBL"
         ],
         "type": "soft",
         "status": "verified",
