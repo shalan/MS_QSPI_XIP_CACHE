@@ -88,10 +88,10 @@ module MS_QSPI_XIP_CACHE_ahbl #(parameter NUM_LINES = 32 )
             last_HTRANS <= 'b0;
         end
         if(HREADY) begin
-            last_HSEL       <= HSEL;
-            last_HADDR      <= HADDR;
-            last_HWRITE     <= HWRITE;
-            last_HTRANS     <= HTRANS;
+            last_HSEL   <= HSEL;
+            last_HADDR  <= HADDR;
+            last_HWRITE <= HWRITE;
+            last_HTRANS <= HTRANS;
         end
     end
 
