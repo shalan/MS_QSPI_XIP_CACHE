@@ -188,7 +188,8 @@ module DMC_Nx16 #(parameter NUM_LINES = 16) (
         if(!rst_n) 
             for(i=0; i<NUM_LINES; i=i+1)
                 VALID[i] <= 1'b0;
-        else  if(wr)  VALID[index]    <= 1'b1;
+        else  
+            if(wr)  VALID[index]    <= 1'b1;
 
     always @(posedge clk)
         if(wr) begin
