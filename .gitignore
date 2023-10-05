@@ -55,3 +55,6 @@ dkms.conf
 .out
 *.vcd
 .vvp
+util
+.DS_Store
+tmp
