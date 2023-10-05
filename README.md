@@ -3,6 +3,7 @@ Quad I/O SPI Flash memory controller with support for:
 - AHB lite interface
 - Execute in Place (XiP)
 - Nx16 Direct-Mapped Cache (default: N=32).
+
 Intended to be used with SoCs that have no on-chip flash memory. 
 
 ## Todo:
