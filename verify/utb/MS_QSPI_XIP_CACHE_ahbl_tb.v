@@ -55,7 +55,7 @@ module MS_QSPI_XIP_CACHE_ahbl_tb;
     );    
     
     wire [3:0] SIO = (douten==4'b1111) ? dout : 4'bzzzz;
-    
+
     assign din = SIO;
 
     sst26wf080b FLASH (
@@ -66,14 +66,14 @@ module MS_QSPI_XIP_CACHE_ahbl_tb;
 
     initial begin
         $dumpfile("MS_QSPI_XIP_CACHE_ahbl_tb.vcd");
-        $dumpvars;
+        $dumpvars(0, DUV);
         // Initializa flash memory ( the hex file inits first 10 bytes)
         #1 $readmemh("./vip/init.hex", FLASH.I0.memory);
     end
 
     // resetting and clocking
     event rst_trig, rst_done;
-    always #5 HCLK = ~HCLK;
+    always #10 HCLK = ~HCLK;
     initial begin
         forever begin
             @(rst_trig);
@@ -115,7 +115,7 @@ module MS_QSPI_XIP_CACHE_ahbl_tb;
             if (expected == HRDATA)
                 #1 $display("Passed");
             else
-                #1 $display("RFailed! read 0x%8x expected 0x%8x", HRDATA, expected);
+                #1 $display("\nFailed! read 0x%8x expected 0x%8x\n", HRDATA, expected);
         end
     endtask
 
@@ -136,30 +136,48 @@ module MS_QSPI_XIP_CACHE_ahbl_tb;
 
         // perform some transactions
         #100;
-        ahbl_w_read(0);
-        check(32'h07060504);
+        repeat(100) begin
+            ahbl_w_read(0);
+            check(32'h03020100);
 
-        ahbl_w_read(4);
-        check(32'h07060504);
+            ahbl_w_read(4);
+            check(32'h07060504);
 
-        ahbl_w_read(8);
-        check(32'h0b0a0908);
+            ahbl_w_read(8);
+            check(32'h0b0a0908);
 
-        ahbl_w_read(12);
-        check(32'h0f0e0d0c);
+            ahbl_w_read(12);
+            check(32'h0f0e0d0c);
 
-        ahbl_w_read(32);
-        check(32'h23222120);
+            ahbl_w_read(16);
+            ahbl_w_read(20);
+            ahbl_w_read(24);
+            ahbl_w_read(28);
 
-        ahbl_w_read(36);
-        check(32'h27262524);
-        
-        ahbl_w_read(40);
-        check(32'h2b2a2928);
+            ahbl_w_read(0);
+            check(32'h03020100);
 
-        ahbl_w_read(44);
-        check(32'h2f2e2d2c);
-        
+            ahbl_w_read(4);
+            check(32'h07060504);
+
+            ahbl_w_read(8);
+            check(32'h0b0a0908);
+
+            ahbl_w_read(12);
+            check(32'h0f0e0d0c);
+            
+            ahbl_w_read(32);
+            check(32'h23222120);
+
+            ahbl_w_read(36);
+            check(32'h27262524);
+            
+            ahbl_w_read(40);
+            check(32'h2b2a2928);
+
+            ahbl_w_read(44);
+            check(32'h2f2e2d2c);
+        end
         #2000;
         $finish;
     end
