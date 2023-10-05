@@ -139,13 +139,10 @@ module MS_QSPI_XIP_CACHE_ahbl_tb;
         repeat(100) begin
             ahbl_w_read(0);
             check(32'h03020100);
-
             ahbl_w_read(4);
             check(32'h07060504);
-
             ahbl_w_read(8);
             check(32'h0b0a0908);
-
             ahbl_w_read(12);
             check(32'h0f0e0d0c);
 
@@ -156,25 +153,19 @@ module MS_QSPI_XIP_CACHE_ahbl_tb;
 
             ahbl_w_read(0);
             check(32'h03020100);
-
             ahbl_w_read(4);
             check(32'h07060504);
-
             ahbl_w_read(8);
             check(32'h0b0a0908);
-
             ahbl_w_read(12);
             check(32'h0f0e0d0c);
             
             ahbl_w_read(32);
             check(32'h23222120);
-
             ahbl_w_read(36);
             check(32'h27262524);
-            
             ahbl_w_read(40);
             check(32'h2b2a2928);
-
             ahbl_w_read(44);
             check(32'h2f2e2d2c);
         end
