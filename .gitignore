@@ -53,5 +53,5 @@ dkms.conf
 
 #iverilog
 .out
-.vcd
+*.vcd
 .vvp
