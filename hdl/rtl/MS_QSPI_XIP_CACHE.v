@@ -16,159 +16,9 @@
 `default_nettype    none
 
 /*
-    AHB-Lite Quad I/O flash XiP controller with Nx16 RO DM $
+    AHB-Lite Quad I/O flash XiP controller with Nx16 RO Direct-mapped Cache.
     Intended to be used to execute only from an external Quad I/O SPI Flash Memory
-    
-    Performance (CM0 @ 50MHz using gcc -O2)
-    
-         Configuration                                 run-time (msec)
-    NUM_LINES   LINE_SIZE   stress          hash            chacha          xtea(256)       aes_sbox        G. Mean
-    128         16          0.208 (4.9x)    0.707 (8.8x)    0.277 (7.4x)    0.212 (11.9x)   0.339 (6.4x)    7.53
-    64          16          0.208 (4.9x)    0.779 (8.0x)    0.277 (7.4x)    0.212 (11.9x)   0.339 (6.4x)    7.39
-    32          16          0.233 (4.4x)    0.869 (7.2x)    0.334 (6.2x)    0.212 (11.9x)   0.339 (6.4x)    6.83
-    16          16          0.410 (2.5x)    1.259 (5.0x)    0.436 (4.7x)    0.212 (11.9x)   0.339 (6.4x)    5.37     <-- default
-    8           16          0.692 (1.5x)    2.217 (2.8x)    0.951 (2.2x)    0.218 (11.6x)   0.341 (6.4x)    3.69
-    4           16          0.899 (1.1x)    4.983 (1.3x)    1.723 (1.2x)
-    2           16          1.020 (1.0x)    6.243 (1.0x)    2.076 (1.0x)    2.527 ( 1.0x)   2.191 (1.0x)    1.00
-    
-    Warning: Don't change LINE_SIZE from 16 due to some hidden bug!
 */
-module MS_QSPI_XIP_CACHE #(parameter   NUM_LINES = 16 , 
-                                        LINE_SIZE = 16 ) (
-    // AHB-Lite Slave Interface
-    input   wire            HCLK,
-    input   wire            HRESETn,
-    input   wire            HSEL,
-    input   wire [31:0]     HADDR,
-    input   wire [1:0]      HTRANS,
-    //input wire [31:0]   HWDATA,
-    input   wire            HWRITE,
-    input   wire            HREADY,
-    output  reg             HREADYOUT,
-    output  wire [31:0]     HRDATA,
-
-    // External Interface to Quad I/O
-    output  wire            sck,
-    output  wire            ce_n,
-    input   wire [3:0]      din,
-    output  wire [3:0]      dout,
-    output  wire [3:0]      douten     
-);
-
-    // Cache wires/buses
-    wire [31:0]                 c_datao;
-    wire [(LINE_SIZE*8)-1:0]    c_line;
-    wire                        c_hit;
-    reg [1:0]                   c_wr;
-    wire [23:0]                 c_A;
-
-    // Flash Reader wires
-    wire            fr_rd;
-    wire            fr_done;
-
-    wire            doe;
-
-    // The State Machine
-    localparam [1:0]    st_idle    = 2'b00;
-    localparam [1:0]    st_wait    = 2'b01;
-    localparam [1:0]    st_rw      = 2'b10;
-    
-    reg [1:0]   state, nstate;
-
-    //AHB-Lite Address Phase Regs
-    reg             last_HSEL;
-    reg [31:0]      last_HADDR;
-    reg             last_HWRITE;
-    reg [1:0]       last_HTRANS;
-
-    always@ (posedge HCLK) begin
-        if(HREADY) begin
-            last_HSEL       <= HSEL;
-            last_HADDR      <= HADDR;
-            last_HWRITE     <= HWRITE;
-            last_HTRANS     <= HTRANS;
-        end
-    end
-
-    always @ (posedge HCLK or negedge HRESETn)
-        if(HRESETn == 0) state <= st_idle;
-        else 
-            state <= nstate;
-
-    always @* begin
-        nstate = st_idle;
-        case(state)
-            st_idle :   if(HTRANS[1] & HSEL & HREADY & c_hit) 
-                            nstate = st_rw;
-                        else if(HTRANS[1] & HSEL & HREADY & ~c_hit) 
-                            nstate = st_wait;
-
-            st_wait :   if(c_wr[1]) 
-                            nstate = st_rw; 
-                        else  
-                            nstate = st_wait;
-
-            st_rw   :   if(HTRANS[1] & HSEL & HREADY & c_hit) 
-                            nstate = st_rw;
-                        else if(HTRANS[1] & HSEL & HREADY & ~c_hit) 
-                            nstate = st_wait;
-        endcase
-    end
-
-    always @(posedge HCLK or negedge HRESETn)
-        if(!HRESETn) HREADYOUT <= 1'b1;
-        else
-            case (state)
-                st_idle :   if(HTRANS[1] & HSEL & HREADY & c_hit) HREADYOUT <= 1'b1;
-                            else if(HTRANS[1] & HSEL & HREADY & ~c_hit) HREADYOUT <= 1'b0;
-                            else HREADYOUT <= 1'b1;
-                st_wait :   if(c_wr[1]) HREADYOUT <= 1'b1;
-                            else HREADYOUT <= 1'b0;
-                st_rw   :   if(HTRANS[1] & HSEL & HREADY & c_hit) HREADYOUT <= 1'b1;
-                            else if(HTRANS[1] & HSEL & HREADY & ~c_hit) HREADYOUT <= 1'b0;
-            endcase
-        
-
-    assign fr_rd        =   ( HTRANS[1] & HSEL & HREADY & ~c_hit & (state==st_idle) ) |
-                            ( HTRANS[1] & HSEL & HREADY & ~c_hit & (state==st_rw) );
-
-    assign c_A          =   last_HADDR[23:0];
-    
-    DMC_Nx16 #(.NUM_LINES(NUM_LINES), .LINE_SIZE(LINE_SIZE)) CACHE ( 
-                	                    .clk(HCLK), 
-                                        .rst_n(HRESETn), 
-                                        .A(last_HADDR[23:0]), 
-                                        .A_h(HADDR[23:0]), 
-                                        .Do(c_datao), 
-                                        .hit(c_hit), 
-                                        .line(c_line), 
-                                        .wr(c_wr[1]) 
-                                    );
-    
-    FLASH_READER #(.LINE_SIZE(LINE_SIZE)) FR (   
-                                                .clk(HCLK), 
-                                                .rst_n(HRESETn), 
-                                                .addr({HADDR[23:4], 4'd0}), 
-                                                .rd(fr_rd), 
-                                                .done(fr_done), 
-                                                .line(c_line),
-                                                .sck(sck), 
-                                                .ce_n(ce_n), 
-                                                .din(din), 
-                                                .dout(dout), 
-                                                .douten(doe) 
-                                            );
-
-    assign HRDATA   = c_datao;
-
-    always @ (posedge HCLK) begin
-        c_wr[0] <= fr_done;
-        c_wr[1] <= c_wr[0];
-    end
-  
-    assign douten = {4{doe}};
-    
-endmodule
 
 /*
     RTL Model for reading from Quad I/O flash using the QUAD I/O FAST READ (0xEB) command
@@ -180,7 +30,7 @@ endmodule
     done is a sserted for 1 clock cycle when the data is ready
 
 */
-module FLASH_READER #(parameter LINE_SIZE=16)(
+module FLASH_READER_QSPI (
     input   wire                    clk,
     input   wire                    rst_n,
     input   wire [23:0]             addr,
@@ -194,7 +44,7 @@ module FLASH_READER #(parameter LINE_SIZE=16)(
     output      [3:0]               dout,
     output  wire                    douten
 );
-
+    localparam LINE_SIZE = 16;
     localparam LINE_BYTES = LINE_SIZE;
     localparam LINE_CYCLES = LINE_BYTES * 8;
 
@@ -279,7 +129,7 @@ module FLASH_READER #(parameter LINE_SIZE=16)(
 endmodule
 
 
-module DMC_Nx16 #(parameter NUM_LINES = 16, LINE_SIZE = 16) (
+module DMC_Nx16 #(parameter NUM_LINES = 16) (
     input wire          clk,
     input wire          rst_n,
     // 
@@ -291,7 +141,7 @@ module DMC_Nx16 #(parameter NUM_LINES = 16, LINE_SIZE = 16) (
     input wire [(LINE_SIZE*8)-1:0]  line,
     input wire          wr
 );
-
+    localparam      LINE_SIZE   = 16;
     localparam      LINE_WIDTH  = LINE_SIZE * 8;
     localparam      INDEX_WIDTH = $clog2(NUM_LINES);
     localparam      OFF_WIDTH   = $clog2(LINE_SIZE);
