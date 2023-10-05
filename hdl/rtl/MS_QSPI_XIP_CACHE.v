@@ -16,11 +16,6 @@
 `default_nettype    none
 
 /*
-    AHB-Lite Quad I/O flash XiP controller with Nx16 RO Direct-mapped Cache.
-    Intended to be used to execute only from an external Quad I/O SPI Flash Memory
-*/
-
-/*
     RTL Model for reading from Quad I/O flash using the QUAD I/O FAST READ (0xEB) command
     The Quad I/O bit has to be set in the flash memory (through flash programming); the 
     provided flash memory model has the bit set.
@@ -31,24 +26,25 @@
 
 */
 module FLASH_READER_QSPI (
-    input   wire                    clk,
-    input   wire                    rst_n,
-    input   wire [23:0]             addr,
-    input   wire                    rd,
-    output  wire                    done,
+    input   wire                        clk,
+    input   wire                        rst_n,
+    input   wire [23:0]                 addr,
+    input   wire                        rd,
+    output  wire                        done,
     output  wire [(LINE_SIZE*8)-1: 0]   line,      
 
-    output  reg                     sck,
-    output  reg                     ce_n,
-    input   wire[3:0]               din,
-    output      [3:0]               dout,
-    output  wire                    douten
+    output  reg                         sck,
+    output  reg                         ce_n,
+    input   wire [3:0]                  din,
+    output  wire [3:0]                  dout,
+    output  wire                        douten
 );
     localparam LINE_SIZE = 16;
     localparam LINE_BYTES = LINE_SIZE;
     localparam LINE_CYCLES = LINE_BYTES * 8;
 
-    parameter IDLE=1'b0, READ=1'b1;
+    localparam  IDLE =  1'b0, 
+                READ =  1'b1;
 
     reg         state, nstate;
     reg [7:0]   counter;
@@ -57,27 +53,32 @@ module FLASH_READER_QSPI (
 
     reg         first;
 
-    wire[7:0]   EBH     = 8'heb;
+    wire[7:0]   EBH = 8'heb;
     
     // for debugging
     wire [7:0] data_0 = data[0];
     wire [7:0] data_1 = data[1];
     wire [7:0] data_15 = data[15];
 
-
     always @*
         case (state)
-            IDLE: if(rd) nstate = READ; else nstate = IDLE;
-            READ: if(done) nstate = IDLE; else nstate = READ;
+            IDLE:   if(rd) 
+                        nstate = READ; 
+                    else 
+                        nstate = IDLE;
+            READ:   if(done) 
+                        nstate = IDLE; 
+                    else 
+                        nstate = READ;
         endcase 
 
     always @ (posedge clk or negedge rst_n)
-        if(!rst_n) first = 1'b1;
+        if(!rst_n) first <= 1'b1;
         else if(first & done) first <= 0;
 
     
     always @ (posedge clk or negedge rst_n)
-        if(!rst_n) state = IDLE;
+        if(!rst_n) state <= IDLE;
         else state <= nstate;
 
     always @ (posedge clk or negedge rst_n)
@@ -103,17 +104,19 @@ module FLASH_READER_QSPI (
 
     always @ (posedge clk)
         if(counter >= 20 && counter <= 19+LINE_BYTES*2)
-            if(sck) data[counter/2 - 10] <= {data[counter/2 - 10][3:0], din}; // Optimize!
+            if(sck) 
+                data[counter/2 - 10] <= {data[counter/2 - 10][3:0], din}; // Optimize!
 
-    assign dout     =   (counter < 8)   ? EBH[7 - counter] :
-                        (counter == 8)  ? saddr[23:20] : 
-                        (counter == 9)  ? saddr[19:16] :
-                        (counter == 10)  ? saddr[15:12] :
-                        (counter == 11)  ? saddr[11:8] :
-                        (counter == 12)  ? saddr[7:4] :
-                        (counter == 13)  ? saddr[3:0] :
-                        (counter == 14)  ? 4'hA :
-                        (counter == 15)  ? 4'h5 : 4'h0;    
+    assign dout     =   (counter < 8)   ?   {3'b0, EBH[7 - counter]}    :
+                        (counter == 8)  ?   saddr[23:20]                : 
+                        (counter == 9)  ?   saddr[19:16]                :
+                        (counter == 10) ?   saddr[15:12]                :
+                        (counter == 11) ?   saddr[11:8]                 :
+                        (counter == 12) ?   saddr[7:4]                  :
+                        (counter == 13) ?   saddr[3:0]                  :
+                        (counter == 14) ?   4'hA                        :
+                        (counter == 15) ?   4'h5                        : 
+                                            4'h0;    
         
     assign douten   = (counter < 20);
 
@@ -130,16 +133,16 @@ endmodule
 
 
 module DMC_Nx16 #(parameter NUM_LINES = 16) (
-    input wire          clk,
-    input wire          rst_n,
+    input wire                      clk,
+    input wire                      rst_n,
     // 
-    input wire  [23:0]  A,
-    input wire  [23:0]  A_h,
-    output wire [31:0]  Do,
-    output wire         hit,
+    input wire  [23:0]              A,
+    input wire  [23:0]              A_h,
+    output wire [31:0]              Do,
+    output wire                     hit,
     //
     input wire [(LINE_SIZE*8)-1:0]  line,
-    input wire          wr
+    input wire                      wr
 );
     localparam      LINE_SIZE   = 16;
     localparam      LINE_WIDTH  = LINE_SIZE * 8;
