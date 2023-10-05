@@ -1,0 +1,46 @@
+{
+    "info": {
+        "name": "MS_QSPI_XIP_CACHE_ahbl",
+        "description": "AHB-Lite Quad I/O SPI Flash memory controller with direct mapped cache and support for XiP.",
+        "repo": "https://github.com/shalan/MS_QSPI_FLASH_CTRL",
+        "owner": "Mohamed Shalan",
+        "license": "Apache 2.0",
+        "author": "Mohamed Shalan",
+        "email": "mshalan@aucegypt.edu",
+        "version": "v1.0.0",
+        "date": "1-01-2020",
+        "category": "digital",
+        "tags": [
+            "memory",
+            "flash",
+            "qspi",
+            "cache"
+        ],
+        "bus": [
+            "AHBL"
+        ],
+        "type": "soft",
+        "status": "verified",
+        "cell_count": "10000",
+        "width": "0.0",
+        "height": "0.0",
+        "technology": "n/a",
+        "clock_freq_mhz": "40",
+        "supply_voltage": [
+            "n/a"
+        ],
+        "tech":[
+            "sky130":{
+                "gl_netlist": True,
+                "cell_count": "14348",
+                "is":"0.0",
+                "id":"0.0"
+            }
+        ]
+    },
+    "clock": "HCLK",
+    "reset": {
+        "name": "HRESETn",
+        "pol": "0"
+    }
+}
