@@ -16,13 +16,14 @@
 `default_nettype    none
 
 /*
-    RTL Model for reading from Quad I/O flash using the QUAD I/O FAST READ (0xEB) command
-    The Quad I/O bit has to be set in the flash memory (through flash programming); the 
-    provided flash memory model has the bit set.
+    RTL Model for reading from Quad I/O flash using the QUAD I/O FAST READ (0xEB) 
+    command with continuous read options. The Quad I/O bit has to be set in the 
+    flash memory (through flash programming); the provided flash memory model has 
+    the bit set.
 
     Every transaction reads one cache line (128 bits or 16 bytes) from the flash.
-    To start a transaction, provide the memory address and assert rd for 1 clock cycle.
-    done is a sserted for 1 clock cycle when the data is ready
+    To start a transaction, provide the memory address and assert rd for 1 clock 
+    cycle. done is a sserted for 1 clock cycle when the data is ready
 
 */
 module FLASH_READER_QSPI (
