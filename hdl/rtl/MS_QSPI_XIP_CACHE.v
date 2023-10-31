@@ -26,7 +26,7 @@
     cycle. done is a sserted for 1 clock cycle when the data is ready
 
 */
-module FLASH_READER_QSPI (
+module FLASH_READER_QSPI #(parameter LINE_SIZE   = 16)(
     input   wire                        clk,
     input   wire                        rst_n,
     input   wire [23:0]                 addr,
@@ -40,7 +40,6 @@ module FLASH_READER_QSPI (
     output  wire [3:0]                  dout,
     output  wire                        douten
 );
-    localparam LINE_SIZE = 16;
     localparam LINE_BYTES = LINE_SIZE;
     localparam LINE_CYCLES = LINE_BYTES * 8;
 
@@ -133,7 +132,7 @@ module FLASH_READER_QSPI (
 endmodule
 
 
-module DMC_Nx16 #(parameter NUM_LINES = 16) (
+module DMC_Nx16 #(parameter NUM_LINES = 16, parameter LINE_SIZE   = 16) (
     input wire                      clk,
     input wire                      rst_n,
     // 
@@ -145,7 +144,6 @@ module DMC_Nx16 #(parameter NUM_LINES = 16) (
     input wire [(LINE_SIZE*8)-1:0]  line,
     input wire                      wr
 );
-    localparam      LINE_SIZE   = 16;
     localparam      LINE_WIDTH  = LINE_SIZE * 8;
     localparam      INDEX_WIDTH = $clog2(NUM_LINES);
     localparam      OFF_WIDTH   = $clog2(LINE_SIZE);
