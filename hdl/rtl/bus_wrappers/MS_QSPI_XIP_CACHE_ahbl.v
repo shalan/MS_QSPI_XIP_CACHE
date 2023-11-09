@@ -162,7 +162,7 @@ module MS_QSPI_XIP_CACHE_ahbl #(parameter NUM_LINES = 32 )
                 .wr(c_wr[1]) 
             );
 
-    FLASH_READER_QSPI  FR (   
+    FLASH_QSPI  FR (   
                 .clk(HCLK), 
                 .rst_n(HRESETn), 
                 .addr({HADDR[23:4], 4'd0}), 
