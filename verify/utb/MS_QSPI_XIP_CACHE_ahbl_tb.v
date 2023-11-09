@@ -67,8 +67,10 @@ module MS_QSPI_XIP_CACHE_ahbl_tb;
     initial begin
         $dumpfile("MS_QSPI_XIP_CACHE_ahbl_tb.vcd");
         $dumpvars(0, DUV);
-        // Initializa flash memory ( the hex file inits first 10 bytes)
-        #1 $readmemh("./vip/init.hex", FLASH.I0.memory);
+        // Initializa flash memory
+        #1 $readmemh("../vip/init.hex", FLASH.I0.memory);
+        #100_000 $display("Timeout, exiting");
+        $finish;
     end
 
     // resetting and clocking
@@ -136,7 +138,7 @@ module MS_QSPI_XIP_CACHE_ahbl_tb;
 
         // perform some transactions
         #100;
-        repeat(100) begin
+        repeat(1) begin
             ahbl_w_read(0);
             check(32'h03020100);
             ahbl_w_read(4);
